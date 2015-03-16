@@ -22,6 +22,7 @@ g_current_task=""
 g_current_depth=
 g_current_seed=
 g_current_seed_id=
+g_failed_time=
 
 function InitEnv() {
 	mkdir -p "${FLAG_CONCURRENCY_PATH}"
@@ -45,6 +46,8 @@ function InitRun() {
 
 		mkdir -p "${DATA_PATH}/${g_current_round}/${SEED_URL//\//|}"
 	done
+
+	g_failed_time=0
 
 	g_current_seed_id=0
 	g_current_seed="${SEED_URLS[${g_current_seed_id}]//\//|}"
@@ -86,9 +89,13 @@ function StartUp() {
 }
 
 function GetCurrentTaskOfNew() {
+	if [ 0 -eq ${g_current_seed_id} ]; then
+		g_failed_time=0
+	fi
 	g_current_seed="${SEED_URLS[${g_current_seed_id}]//\//|}"
 	g_current_task="`ls -l ${FLAG_SCHEDULE_PATH}/${g_current_seed}/ | grep "^-" | grep -v -E "ready|running" | awk '{print $NF}' | head -n 1`"
 	if [ x == x"${g_current_task}" ]; then
+		((g_failed_time = g_failed_time + 1))
 		return 255
 	fi
 	((g_current_seed_id = (g_current_seed_id + 1) % ${#SEED_URLS[@]}))
@@ -157,7 +164,11 @@ function Run() {
 		GetCurrentTaskOfNew
 		ret=$?
 		if [ ${ret} -ne 0 ]; then
-			break
+			if [ ${g_failed_time} -eq ${#SEED_URLS[@]} ]; then				
+				break
+			else
+				continue
+			fi
 		else
 			AppendJobsForTask
 		fi
