@@ -94,11 +94,11 @@ function GetCurrentTaskOfNew() {
 	fi
 	g_current_seed="${SEED_URLS[${g_current_seed_id}]//\//|}"
 	g_current_task="`ls -l ${FLAG_SCHEDULE_PATH}/${g_current_seed}/ | grep "^-" | grep -v -E "ready|running" | awk '{print $NF}' | head -n 1`"
+	((g_current_seed_id = (g_current_seed_id + 1) % ${#SEED_URLS[@]}))
 	if [ x == x"${g_current_task}" ]; then
 		((g_failed_time = g_failed_time + 1))
 		return 255
 	fi
-	((g_current_seed_id = (g_current_seed_id + 1) % ${#SEED_URLS[@]}))
 	return 0
 }
 
@@ -172,8 +172,6 @@ function Run() {
 		else
 			AppendJobsForTask
 		fi
-
-		sleep ${SLEEP_TIME}s
 
 		RunATask ${g_current_round} ${g_current_task} ${g_current_depth} ${g_current_seed}
 		ret=$?

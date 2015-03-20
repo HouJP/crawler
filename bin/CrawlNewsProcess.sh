@@ -64,6 +64,8 @@ function ExecuteCurrentTask() {
 		return 1
 	fi
 
+	sleep ${SLEEP_TIME}s
+
 	DownloadURL ${round} ${task} ${seed}
 	ret=$?
 	if [ 0 -ne ${ret} ]; then
